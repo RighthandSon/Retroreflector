@@ -17,7 +17,6 @@
  */
 
 #include "bzfsAPI.h"
-#include "plugin_utils.h"
 
 class retroreflector : public bz_Plugin
 {
@@ -32,7 +31,7 @@ BZ_PLUGIN(retroreflector)
 
 const char* retroreflector::Name()
 {
-    return "retroreflector 1.0.0";
+    return "retroreflector 1.0.1";
 }
 
 void retroreflector::Init(const char* config)
@@ -52,23 +51,28 @@ void retroreflector::Event(bz_EventData* eventData)
 {
     switch (eventData->eventType)
     {
-    case bz_eFlagGrabbedEvent:
-    break;
-
     case bz_ePlayerDieEvent:
     {
         // This event is called each time a tank is killed.
         bz_PlayerDieEventData_V2* diedata = (bz_PlayerDieEventData_V2*)eventData;
 
-        if (diedata->flagKilledWith == "L")
+        bz_BasePlayerRecord* killer = bz_getPlayerByIndex(diedata->killerID);
+
+        if (killer)
         {
-            std::string RR = bz_getFlagName(diedata->flagHeldWhenKilled);
-            if ("RR" == RR)
+            if (diedata->flagKilledWith == "L" && killer->spawned)
             {
-                bz_sendTextMessagef(BZ_SERVER, diedata->killerID, "You killed yourself by shooting %s while they held retroreflector", bz_getPlayerCallsign(diedata->playerID));
-                bz_killPlayer(diedata->killerID, false, diedata->playerID, "RR");
+                std::string RR = bz_getFlagName(diedata->flagHeldWhenKilled);
+                if ("RR" == RR)
+                {
+                    bz_sendTextMessagef(BZ_SERVER, diedata->killerID, "You killed yourself by shooting %s while they held retroreflector", bz_getPlayerCallsign(diedata->playerID));
+                    bz_killPlayer(diedata->killerID, false, diedata->playerID, "RR");
+                    bz_incrementPlayerLosses(diedata->playerID, -1);
+                }
             }
         }
+        bz_freePlayerRecord(killer);
+
         // Data
         // ----
         // (int)                  playerID           - ID of the player who was killed.
