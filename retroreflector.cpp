@@ -31,7 +31,7 @@ BZ_PLUGIN(retroreflector)
 
 const char* retroreflector::Name()
 {
-    return "retroreflector 1.0.1";
+    return "retroreflector 1.0.2";
 }
 
 void retroreflector::Init(const char* config)
@@ -60,15 +60,12 @@ void retroreflector::Event(bz_EventData* eventData)
 
         if (killer)
         {
-            if (diedata->flagKilledWith == "L" && killer->spawned)
+            std::string RR = bz_getFlagName(diedata->flagHeldWhenKilled);
+            if ("RR" == RR && diedata->flagKilledWith == "L" && killer->spawned && (diedata->killerTeam != diedata->team || diedata->killerTeam == eRogueTeam))
             {
-                std::string RR = bz_getFlagName(diedata->flagHeldWhenKilled);
-                if ("RR" == RR)
-                {
-                    bz_sendTextMessagef(BZ_SERVER, diedata->killerID, "You killed yourself by shooting %s while they held retroreflector", bz_getPlayerCallsign(diedata->playerID));
-                    bz_killPlayer(diedata->killerID, false, diedata->playerID, "RR");
-                    bz_incrementPlayerLosses(diedata->playerID, -1);
-                }
+                bz_sendTextMessagef(BZ_SERVER, diedata->killerID, "You killed yourself by shooting %s while they held retroreflector", bz_getPlayerCallsign(diedata->playerID));
+                bz_killPlayer(diedata->killerID, false, diedata->playerID, "RR");
+                bz_incrementPlayerLosses(diedata->playerID, -1);
             }
         }
         bz_freePlayerRecord(killer);
